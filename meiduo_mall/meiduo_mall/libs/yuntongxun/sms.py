@@ -71,7 +71,7 @@ class CCP(object):
             return 0
         else:
             # 返回-1 表示发送失败
-            print(result)
+            # print(result)
             return -1
 
 
