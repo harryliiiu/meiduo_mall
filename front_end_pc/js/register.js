@@ -9,12 +9,14 @@ var vm = new Vue({
 		error_allow: false,
 		error_sms_code: false,
 		sending_flag: false,
+		error_email: false,
 
 
 		username: '',
 		password: '',
 		password2: '',
-		mobile: '', 
+		mobile: '',
+		email: '',
 		sms_code: '',
 		allow: false,
 		sms_code_tip: '获取短信验证码',
@@ -36,6 +38,14 @@ var vm = new Vue({
 			} else {
 				this.error_password = false;
 			}		
+		},
+		check_email: function (){
+			var len = this.email.length;
+			if(len<2||len>20){
+				this.error_email = true;
+			} else {
+				this.error_email = false;
+			}
 		},
 		check_cpwd: function (){
 			if(this.password!=this.password2) {
@@ -74,6 +84,7 @@ var vm = new Vue({
 			this.check_phone();
 			this.check_sms_code();
 			this.check_allow();
+			this.check_email();
 		},
 		// 发送手机短信验证码
         send_sms_code: function(){
@@ -131,6 +142,54 @@ var vm = new Vue({
                     this.sending_flag = false;
                 })
         },
+		// 注册
+        on_submit: function () {
+            this.check_username();
+            this.check_pwd();
+            this.check_cpwd();
+            this.check_phone();
+            this.check_sms_code();
+            this.check_allow();
+			this.check_email();
+
+            if (this.error_name == false && this.error_password == false && this.error_check_password == false
+                && this.error_phone == false && this.error_sms_code == false && this.error_allow == false) {
+                axios.post(this.host + '/users/', {
+                    username: this.username,
+                    password: this.password,
+                    password2: this.password2,
+                    mobile: this.mobile,
+                    sms_code: this.sms_code,
+					email: this.email,
+                    allow: this.allow.toString()
+                }, {
+                    responseType: 'json'
+                })
+                    .then(response => {
+                        // 记录用户的登录状态
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        localStorage.token = response.data.token;
+                        localStorage.username = response.data.username;
+                        localStorage.user_id = response.data.id;
+                        location.href = '/index.html';
+
+                    })
+                    .catch(error => {
+                        if (error.response.status == 400) {
+                            if ('non_field_errors' in error.response.data) {
+                                this.error_sms_code_message = error.response.data.non_field_errors[0];
+                            } else {
+                                this.error_sms_code_message = '数据有误';
+                            }
+                            this.error_sms_code = true;
+                        } else {
+                            console.log(error.response.data);
+                        }
+                    })
+            }
+        }
+
 
 	}
 });

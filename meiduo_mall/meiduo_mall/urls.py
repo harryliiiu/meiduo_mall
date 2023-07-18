@@ -18,5 +18,6 @@ from django.conf.urls import include, url
 
 urlpatterns = [
     url('^admin/', admin.site.urls),
-    url(r'', include('verifications.urls'))
+    url(r'^', include('verifications.urls')),  # 短信模块
+    url(r'^', include('users.urls'))  # 用户模块
 ]

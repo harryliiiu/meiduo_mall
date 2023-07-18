@@ -1,11 +1,11 @@
 from random import randint
 from rest_framework.views import APIView
 from django_redis import get_redis_connection
-from meiduo_mall.libs.yuntongxun.sms import CCP
 from rest_framework.response import Response
 from rest_framework import status
 import logging
 from . import constants
+from celery_tasks.sms.tasks import send_sms_code
 
 logger = logging.getLogger('django')
 
@@ -21,7 +21,7 @@ class SMSCodeView(APIView):
         redis_conn = get_redis_connection('verify_codes')
 
         # 判断60秒内是否发送过短信
-        send_flag = pl.get('send_flag_ %s' % mobile)
+        send_flag = redis_conn.get('send_flag_ %s' % mobile)
 
         # 创建Redis管道
         pl = redis_conn.pipeline()
@@ -35,9 +35,8 @@ class SMSCodeView(APIView):
         # 执行管道
         pl.execute()
         # 4.利用容联云发送短信验证码、
-        flag = CCP().send_template_sms(mobile, [sms_code, constants.SEND_CODE_REDIS_EXPIRES // 60], 1)
-        # 5.响应
-        if flag == 0:
-            return Response({'message': 'ok'})
-        return Response({'message': '接收短信失败，请重试。'})
+        # CCP().send_template_sms(mobile, [sms_code, constants.SEND_CODE_REDIS_EXPIRES // 60], 1)
+        # send_sms_code(mobile, sms_code)
+        send_sms_code.delay(mobile, sms_code)
+        return Response({'message': 'ok'})
 
