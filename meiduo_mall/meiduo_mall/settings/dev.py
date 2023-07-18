@@ -26,7 +26,8 @@ SECRET_KEY = 'i*uylccl)c_1f5xji9j5lapc_0*-bu10x%x7k)!2@5o7&)$n@i'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# 允许哪些域名访问django
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'www.meiduo.com', 'api.meiduo.com']
 
 # Application definition
 
@@ -38,10 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'users.apps.UsersConfig'
+    'users.apps.UsersConfig',
+    'corsheaders',
+
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -87,20 +91,30 @@ DATABASES = {
     }
 }
 
-## 使用Redis缓存
+# 使用Redis缓存
 CACHES = {
-    "default": {
+    "default": {  # 缓存省市区
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # "PASSWORD": "1234.abcd",
         }
     },
-    "session": {
+    "session": {  # 缓存session
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # "PASSWORD": "1234.abcd",
+        }
+    },
+    "verify_codes": {  # 存储验证码
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # "PASSWORD": "1234.abcd",
         }
     }
 }
@@ -193,3 +207,13 @@ REST_FRAMEWORK = {
 
 # 修改django认证系统的默认模型
 AUTH_USER_MODEL = 'users.User'
+
+
+# CORS 追加⽩白名单
+CORS_ORIGIN_WHITELIST = (
+    '127.0.0.1:8080',
+    'localhost:8080',
+    'www.meiduo.com:8080',
+    'api.meiduo.com:8000',
+)
+CORS_ALLOW_CREDENTIALS = True # 允许携带cookie
